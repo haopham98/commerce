@@ -1,0 +1,34 @@
+{% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block title %}Create Auction{% endblock %}
+
+{% block body %}
+
+<h2>Create Auction</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="title">Title:</label>
+        <input type="text" class="form-control" id="title" name="title" required>
+    </div>
+    <div class="form-group">
+        <label for="description">Description:</label>
+        <textarea class="form-control" id="description" name="description" required></textarea>
+    </div>
+    <div class="form-group">
+        <label for="starting_bid">Starting Bid:</label>
+        <input type="number" class="form-control" id="starting_bid" name="starting_bid" step="0.01" required>
+    </div>
+    <div class="form-group">
+
+        <label for="image_url">Image Upload:</label>
+        <input type="file" class="file-input" id="image_auction" name="image_auction">
+    </div>
+    <button type="submit" class="btn btn-primary">Create Auction</button>
+</form>
+{% if error %}
+    <div class="alert alert-danger mt-3">{{ error }}</div>
+{% endif %}
+
+{% endblock %}
