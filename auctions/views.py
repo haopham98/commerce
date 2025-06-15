@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, Auction
+from .models import User, Auction, AuctionCategory
 
 
 def index(request):
@@ -64,14 +64,17 @@ def register(request):
 
 
 def create_auction(request):
-
+    categories = AuctionCategory.objects.all()
     if not request.user.is_authenticated:
         return render(request, "auctions/login.html", {
            "message": "You must be logged in to create an auction."
     })
 
     if request.method == "GET":
-        return render(request, "auctions/auction_form.html")
+        return render(request, "auctions/auction_form.html", {
+            "user": request.user,
+            "categories": categories
+        })
                       
     if request.method == "POST":
         title = request.POST["title"]
@@ -79,12 +82,13 @@ def create_auction(request):
         starting_bid = request.POST["starting_bid"]
         end_date = request.POST["end_date"]
         image_auction = request.POST.get("image_auction", None)
+        print(request.POST)
         auction = Auction(
             title=title,
             description=description,
             starting_bid=starting_bid,
             end_date=end_date,
-            creator=request.user
+            user=request.user
         )
         if image_auction:
             auction.image_auction = image_auction
