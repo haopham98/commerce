@@ -3,5 +3,20 @@
 {% block body %}
     <h2>Active Listings</h2>
 
-    TODO
+    {% if listings %}
+        <div class="list-group">
+            {% for listing in listings %}
+                <a href="{% url 'auction_detail' listing.id %}" class="list-group-item list-group-item-action">
+                    <img src="{{ listing.image_url }}" alt="{{ listing.title }}" class="img-fluid" style="max-width: 300px; max-height: 200px; float: left; margin-right: 10px;">
+                    <h5 class="mb-1">{{ listing.title }}</h5>
+                    <p class="mb-1">{{ listing.description }}</p>
+                    <p>Starting Bid: ${{ listing.starting_bid }}</p>
+                    <br>
+                    <p>End Date: {{ listing.end_date|date:"Y-m-d H:i" }}</p>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No active listings available.</p>
+    {% endif %}
 {% endblock %}

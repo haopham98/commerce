@@ -1,0 +1,30 @@
+{% extends "auctions/layout.html" %}
+
+{% block title %}Auction Detail{% endblock %}
+
+{% block body %}
+    {% if listing %}
+        <h2> {{ listing.title }}</h2>
+        <img src="{{ listing.image_url }}" alt="{{ listing.title }}" class="img-fluid" style="max-width: 300px; max-height: 200px;">
+        <p> {{listing.description}} </p>
+        <p> Starting Bid: ${{ listing.starting_bid }} </p>
+        <p> End Date: {{ listing.end_date|date:"Y-m-d H:i" }} </p>
+        <p> Category: {{ listing.category }} </p>
+        <p> Created by: {{ listing.owner.username }} </p>
+        <a href="{% url 'add_to_watchlist' listing.id %}" class="btn btn-secondary">Add to Watchlist</a>
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'place_bid' listing.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="bid_amount">Place a Bid:</label>
+                    <input type="number" class="form-control" id="bid_amount" name="bid_amount" step="0.01" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Bid</button>
+            </form>
+        {% endif %}
+    {% endif %}
+    {% if message %}
+        <div class="alert alert-info mt-3">{{ message }}</div>
+    {% endif %}
+{% endblock %}
+
