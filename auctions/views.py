@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
@@ -13,7 +13,7 @@ def index(request):
     listings = Listing.objects.filter(is_active=True).order_by('created_at')
     return render(request, "auctions/index.html", {
         "listings": listings,
-        "categories": [category[0] for category in CATEGORY_CHOICES]
+        "categories": [category[0] for category in CATEGORY_CHOICES] # List of categories for the dropdown
     })
 
 def login_view(request):
@@ -101,11 +101,11 @@ def create_auction(request):
         else:
             auction.image_url = "https://placehold.co/600x400"
         auction.save()
-        return render(request, "auctions/index.html", {
-            "message": "Auction created successfully!"
-        })
+    return redirect("/", {
+        "message": "Auction created successfully!"
+    })
+    
 
-@login_required
 def auction_detail(request, auction_id):
     listing = Listing.objects.get(id=auction_id)
     return render(request, "auctions/auction_detail.html", {
@@ -114,22 +114,41 @@ def auction_detail(request, auction_id):
 
 @login_required
 def place_bid(request, auction_id):
+    """
+        Get bid of current user for a specific auction
+        check if the bid is higher than the current bid
+        if so, update the current bid and create a new Bid object
+    """
+    item = Listing.objects.get(id=auction_id)
     if request.method == "POST":
-        item = Listing.objects.get(id=auction_id)
-        bid_amount = request.POST["bid_amount"]
-        
-        if float(bid_amount) <= item.current_bid:
+        bid_amount = request.POST.get("bid_amount", None) 
+        if bid_amount is None:
             return render(request, "auctions/auction_detail.html", {
                 "listing": item,
-                "message": "Your bid must be higher than the current bid."
+                "message": "Please enter a bid amount."
             })
-
-        item.current_bid = bid_amount
-        item.save()
-        return render(request, "auctions/auction_detail.html", {
-            "listing": item,
-            "message": "Your bid has been placed successfully."
-        })
+        try:
+            bid_amount = float(bid_amount) #parse the bid amount to float
+            if bid_amount <= item.current_bid:
+                return render(request, "auctions/auction_detail.html", {
+                    "listing": item,
+                    "message": "Bid must be higher than the current bid."
+                })
+            # Update the current bid of the item
+            item.current_bid = bid_amount
+            item.save()
+            # Create a new Bid object
+            new_bid = Bid(listing=item, user=request.user, amount=bid_amount)
+            new_bid.save()
+            return render(request, "auctions/auction_detail.html", {
+                "listing": item,
+                "message": "Bid placed successfully!"
+            })
+        except ValueError:
+            return render(request, "auctions/auction_detail.html", {
+                "listing": item,
+                "message": "Invalid bid amount. Please enter a valid number."
+            })
 
 @login_required
 def watchlist(request):

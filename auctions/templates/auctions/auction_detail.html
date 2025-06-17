@@ -7,12 +7,13 @@
         <h2> {{ listing.title }}</h2>
         <img src="{{ listing.image_url }}" alt="{{ listing.title }}" class="img-fluid" style="max-width: 300px; max-height: 200px;">
         <p> {{listing.description}} </p>
-        <p> Starting Bid: ${{ listing.starting_bid }} </p>
+        <p> Current Bid: ${{ listing.current_bid }} </p>
         <p> End Date: {{ listing.end_date|date:"Y-m-d H:i" }} </p>
         <p> Category: {{ listing.category }} </p>
         <p> Created by: {{ listing.owner.username }} </p>
-        <a href="{% url 'add_to_watchlist' listing.id %}" class="btn btn-secondary">Add to Watchlist</a>
+        
         {% if user.is_authenticated %}
+        <a href="{% url 'add_to_watchlist' listing.id %}" class="btn btn-secondary">Add to Watchlist</a>
             <form method="post" action="{% url 'place_bid' listing.id %}">
                 {% csrf_token %}
                 <div class="form-group">
@@ -24,7 +25,9 @@
         {% endif %}
     {% endif %}
     {% if message %}
-        <div class="alert alert-info mt-3">{{ message }}</div>
+        <script>
+            alert("{{ message }}");
+        </script>
     {% endif %}
 {% endblock %}
 

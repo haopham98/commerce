@@ -1,16 +1,31 @@
 {% extends "auctions/layout.html" %}
 
 {% block title %}Watchlist{% endblock %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Add any JavaScript functionality if needed
+        const removeButtons = document.querySelectorAll(".btn-danger");
+        removeButtons.forEach(button => {
+            button.addEventListener("click", function(event) {
+                if (!confirm("Are you sure you want to remove this item from your watchlist?")) {
+                    event.preventDefault();
+                }
+            });
+        });
+    });
+</script>
 
 {% block body %}
     <h2>Your Watchlist</h2>
     <ul>
         {% for item in watchlist %}
             <li>
+                <img src="{{ item.listing.image_url }}" alt="{{ item.listing.title }}" class="img-thumbnail" style="width: 250px; height: 200px;">
                 <h5><a href="{% url 'auction_detail' item.listing.id %}">{{ item.listing.title }}</a></h5>
                 <button class="btn btn-danger btn-sm" 
-                        onclick="if(confirm('Are you sure you want to remove this item from your watchlist?')) { window.location.href='{% url 'remove_from_watchlist' item.listing.id %}'; }">
+                        onclick="{ window.location.href='{% url 'remove_from_watchlist' item.listing.id %}'; }"> <!-- Ignore -->
                     Remove
+                </button>
             </li>
         {% empty %}
             <li>No items in your watchlist.</li>
