@@ -10,7 +10,7 @@ from .models import User, Listing, Bid, Comment, Watchlist
 
 
 def index(request):
-    listings = Listing.objects.filter(is_active=True).order_by('created_at')
+    listings = Listing.objects.filter().order_by('created_at')
     return render(request, "auctions/index.html", {
         "listings": listings,
         "categories": [category[0] for category in CATEGORY_CHOICES] # List of categories for the dropdown
@@ -107,13 +107,37 @@ def create_auction(request):
     
 
 def auction_detail(request, auction_id):
+    """
+        Render the auction detail page for a specific auction
+        with the auction item, comments, and check if the user is the owner
+        If the auction is closed, display the user who won the auction
+    """
     item = Listing.objects.get(id=auction_id)
-    return render(request, "auctions/auction_detail.html", {
-        "listing": item,
-        "comments": item.comments.all(),
-        "is_owner": item.owner == request.user,
-        "is_active": item.is_active,
-    })
+    if not item.is_active:
+        #if item.won_price > 0 and item.current_bid != item.starting_bid:
+        winner = Bid.objects.filter(listing=item).order_by('-amount').first()
+        if winner:
+            is_winner = winner.user == request.user
+        else:
+            is_winner = False
+        return render(request, "auctions/auction_detail.html", {
+            "listing": item,
+            "comments": item.comments.all(),
+            "is_owner": item.owner == request.user,
+            "is_active": item.is_active,
+            "is_winner": is_winner,
+            "winner": winner if winner else None
+        })
+    else:
+        winner = None
+        is_winner = False
+        return render(request, "auctions/auction_detail.html", {
+            "listing": item,
+            "comments": item.comments.all(),
+            "is_owner": item.owner == request.user,
+            "is_active": item.is_active,
+            "is_winner": is_winner
+        })
 
 @login_required
 def place_bid(request, auction_id):
