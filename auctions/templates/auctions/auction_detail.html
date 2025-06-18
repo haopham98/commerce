@@ -1,33 +1,88 @@
 {% extends "auctions/layout.html" %}
 
-{% block title %}Auction Detail{% endblock %}
-
 {% block body %}
+<div class="container my-4">
     {% if listing %}
-        <h2> {{ listing.title }}</h2>
-        <img src="{{ listing.image_url }}" alt="{{ listing.title }}" class="img-fluid" style="max-width: 300px; max-height: 200px;">
-        <p> {{listing.description}} </p>
-        <p> Current Bid: ${{ listing.current_bid }} </p>
-        <p> End Date: {{ listing.end_date|date:"Y-m-d H:i" }} </p>
-        <p> Category: {{ listing.category }} </p>
-        <p> Created by: {{ listing.owner.username }} </p>
-        
-        {% if user.is_authenticated %}
-        <a href="{% url 'add_to_watchlist' listing.id %}" class="btn btn-secondary">Add to Watchlist</a>
-            <form method="post" action="{% url 'place_bid' listing.id %}">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="bid_amount">Place a Bid:</label>
-                    <input type="number" class="form-control" id="bid_amount" name="bid_amount" step="0.01" required>
+        <div class="row">
+            <!-- Cột trái: Hình ảnh -->
+            <div class="col-md-6">
+                {% if listing.image_url %}
+                    <img src="{{ listing.image_url }}" alt="{{ listing.title }}" class="img-fluid" style="max-width: auto; max-height: auto;">
+                {% else %}
+                    <p>No image available</p>
+                {% endif %}
+            </div>
+
+            <!-- Cột phải: Thông tin sản phẩm và nút -->
+            <div class="col-md-6">
+                <h2>{{ listing.title }}</h2>
+                <p><strong>Description:</strong> {{ listing.description }}</p>
+                <p><strong>Current Bid:</strong> ${{ listing.current_bid }}</p>
+                <p><strong>End Date:</strong> {{ listing.end_date|date:"Y-m-d H:i" }}</p>
+                <p><strong>Category:</strong> {{ listing.category|default:"None" }}</p>
+                <p><strong>Created by:</strong> {{ listing.owner.username }}</p>
+
+                <!-- Nút và form bên dưới thông tin -->
+                {% if user.is_authenticated %}
+                    <div class="mt-3">
+                        <a href="{% url 'add_to_watchlist' listing.id %}" class="btn btn-secondary">
+                            {{ is_watched|yesno:"Remove from Watchlist,Add to Watchlist" }}
+                        </a>
+                    </div>
+                    <form method="post" action="{% url 'place_bid' listing.id %}" class="mt-3">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="bid_amount">Place a Bid:</label>
+                            <input type="number" class="form-control" id="bid_amount" name="bid_amount" step="0.01" min="{{ listing.current_bid|add:0.01 }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Bid</button>
+                    </form>
+                {% endif %}
+                <div class="mt-3">
+                    <a href="{% url 'close_auction' listing.id %}" class="btn btn-danger">
+                        Close Auction
+                    </a>
                 </div>
-                <button type="submit" class="btn btn-primary">Submit Bid</button>
-            </form>
-        {% endif %}
+            </div>
+        </div>
+
+        <!-- Phần bình luận -->
+        <div class="mt-5">
+            <h3>Comments</h3>
+            {% if comments %}
+                {% for comment in comments %}
+                    <div class="border p-3 mb-2">
+                        <p><strong>{{ comment.user.username }}</strong> ({{ comment.created_at|date:"Y-m-d H:i" }}):</p>
+                        <p>{{ comment.content }}</p>
+                    </div>
+                {% empty %}
+                    <p>No comments yet.</p>
+                {% endfor %}
+            {% else %}
+                <p>No comments yet.</p>
+            {% endif %}
+
+            <!-- Form thêm bình luận -->
+            {% if user.is_authenticated %}
+                <form method="post" action="{% url 'add_comment' listing.id %}" class="mt-3">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="comment_content">Add a Comment:</label>
+                        <textarea class="form-control" id="comment_content" name="comment_content" rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Comment</button>
+                </form>
+            {% endif %}
+        </div>
+    {% else %}
+        <p>Listing not found.</p>
     {% endif %}
+
+    <!-- Hiển thị thông báo (nếu có) -->
     {% if message %}
         <script>
             alert("{{ message }}");
         </script>
     {% endif %}
+</div>
 {% endblock %}
-

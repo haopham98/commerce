@@ -107,9 +107,12 @@ def create_auction(request):
     
 
 def auction_detail(request, auction_id):
-    listing = Listing.objects.get(id=auction_id)
+    item = Listing.objects.get(id=auction_id)
     return render(request, "auctions/auction_detail.html", {
-        "listing": listing
+        "listing": item,
+        "comments": item.comments.all(),
+        "is_owner": item.owner == request.user,
+        "is_active": item.is_active,
     })
 
 @login_required
@@ -175,6 +178,7 @@ def add_to_watchlist(request, auction_id):
 
 @login_required
 def remove_from_watchlist(request, auction_id):
+    
     """
         remove an item from the user's watchlist
     """
@@ -189,3 +193,56 @@ def remove_from_watchlist(request, auction_id):
         "listing": item,
         "message": message
     })
+
+@login_required
+def add_comment(request, auction_id):
+    """
+        Add a comment to an auction listing
+        after the user is authenticated
+        and render the auction detail page with the new comment
+    """
+    if request.method == "POST":
+        item = Listing.objects.get(id=auction_id)
+        comment_content = request.POST.get("comment_content", None)
+
+        if comment_content:
+            new_comment = Comment(listing=item, user=request.user, content=comment_content)
+            new_comment.save()
+            
+            return render(request, "auctions/auction_detail.html", {
+                "listing": item,
+                "comments": item.comments.all(),
+                "message": "Comment added successfully!",
+                "page_url": request.build_absolute_uri()
+            })
+        else:
+            return redirect(request, "auctions/auction_detail.html", {
+                "listing": item,
+                "comments": item.comments.all(),
+                "message": "Comment content cannot be empty."
+            })
+
+@login_required
+def close_auction(request, auction_id):
+    """
+        Check if the auction is active
+        and current user is the owner of the auction
+        If so, close the auction and update the won price
+    """
+    item = Listing.objects.get(id=auction_id)
+    if item.is_active and item.owner == request.user:
+        item.is_active = False
+        item.won_price = item.current_bid
+        item.save()
+        return render(request, "auctions/auction_detail.html", {
+            "listing": item,
+            "message": "Auction closed successfully!",
+            "comments": item.comments.all(),
+            "is_owner": True
+        })
+    else:
+        return render(request, "auctions/auction_detail.html", {
+            "listing": item,
+            "comments": item.comments.all(),
+            "is_owner": False
+        })
