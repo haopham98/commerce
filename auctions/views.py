@@ -270,3 +270,14 @@ def close_auction(request, auction_id):
             "comments": item.comments.all(),
             "is_owner": False
         })
+
+def category_view(request, category_name):
+    """
+        Render the auction listings for a specific category
+    """
+    listings = Listing.objects.filter(category=category_name, is_active=True).order_by('created_at')
+    return render(request, "auctions/category.html", {
+        "category": category_name,
+        "listings": listings,
+        "categories": [category[0] for category in CATEGORY_CHOICES]
+    })

@@ -23,7 +23,12 @@
     <div class="form-group">
         <label for="end_date">End Date:</label>
         <input type="datetime-local" class="form-control" id="end_date" name="end_date" required>
+        <!-- end date must be in the future -->
+        <script>
+            document.getElementById('end_date').min = new Date().toISOString().slice(0, 16);
+        </script>
     </div>
+
     <div class="form-group">
         <label for="category">Category:</label>
         <select class="form-control" id="category" name="category" required>
