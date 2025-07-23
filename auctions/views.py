@@ -68,6 +68,12 @@ def register(request):
         return render(request, "auctions/register.html")
 
 def create_auction(request):
+    """
+        Check if the user is authenticated
+        If not, redirect to the login page with a message
+        If authenticated, render the auction creation form
+        and handle the form submission to create a new auction
+    """
     
     if not request.user.is_authenticated:
         return render(request, "auctions/login.html", {
@@ -179,6 +185,10 @@ def place_bid(request, auction_id):
 
 @login_required
 def watchlist(request):
+    """
+        Render the user's watchlist
+        Display all items in the watchlist
+    """
     user_watchlist = Watchlist.objects.filter(user=request.user)
     for item in user_watchlist:
         print(item.listing.id, item.listing.title)
@@ -188,6 +198,10 @@ def watchlist(request):
 
 @login_required
 def add_to_watchlist(request, auction_id):
+    """
+        Add an item to the user's watchlist
+        If the item already exists in the watchlist, notify the user
+    """
     item = Listing.objects.get(id=auction_id)
     watchlist_item, created = Watchlist.objects.get_or_create(user=request.user, listing=item)
     # If the item was not created, it means it already exists in the watchlist
